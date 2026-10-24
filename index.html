@@ -198,7 +198,7 @@ const vp=p=>G.verts.reduce((s,v)=>s+(v.owner===p?(v.city?2:1):0),0);
 const total=p=>RK.reduce((s,k)=>s+G.players[p].res[k],0);
 function canSettle(v,p,setup){
   const V=G.verts[v];if(!V||V.owner>=0)return false;
-  if(V.adj.some(a=>G.verts[a].owner>=0))return false;
+  if(V.adj.some(a=>G.verts[a].owner>=0&&G.verts[a].owner!==p))return false; // family rule: only another player's house blocks
   if(setup)return true;
   return G.edges.some(e=>e.owner===p&&(e.a===v||e.b===v));
 }
@@ -458,7 +458,11 @@ function hintText(){
   if(G.phase==='roll')return 'دورك يا '+p.name+'! ارمِ النرد';
   if(G.phase==='robber')return 'رقم 7! اضغط على أرض لتنقل إليها العاصفة';
   if(ui.mode==='road')return 'اضغط على خط مضيء لبناء الطريق';
-  if(ui.mode==='settle')return 'اضغط على دائرة مضيئة لبناء البيت';
+  if(ui.mode==='settle'){
+    if(!G.verts.some((_,i)=>canSettle(i,G.cur,false)))return 'ماكو مكان للبيت! البيت لازم يكون على طريقك، وما يكون جنب بيت لاعب ثاني. ابنِ طريقًا أولًا 🛣️';
+    return 'اضغط على دائرة مضيئة لبناء البيت';
+  }
+  if(ui.mode==='city'&&!G.verts.some((_,i)=>canCity(i,G.cur)))return 'ماكو بيت تحوّله لمدينة';
   if(ui.mode==='city')return 'اضغط على أحد بيوتك لتحويله إلى مدينة';
   return 'ابنِ أو بادل، ثم أنهِ الدور';
 }
@@ -588,6 +592,7 @@ function render(){
       ${mt&&G.phase!=='setup'?`
       <div class="card">
         <h3>ابنِ (اضغط ثم اختر المكان على الخريطة)</h3>
+        <span class="small">البيت يكون على طريقك، وما يكون جنب بيت لاعب ثاني.</span>
         <div class="builds">${bld('road','طريق')}${bld('settle','بيت')}${bld('city','مدينة')}</div>
       </div>
       <div class="card trade">
@@ -614,7 +619,7 @@ function render(){
       <details><summary>طريقة اللعب</summary><ul>
         <li>في البداية يضع كل لاعب بيتًا وطريقًا، ثم جولة ثانية بالترتيب المعاكس. البيت الثاني يعطيك موارد الأراضي حوله.</li>
         <li>في دورك ارمِ النرد: كل أرض عليها الرقم الخارج تعطي موردًا لكل بيت ملاصق لها (والمدينة تأخذ اثنين).</li>
-        <li>البيوت لا تتلاصق، ويجب أن تتصل بطرقك.</li>
+        <li>البيت الجديد يكون على طريقك (طريق واحد يكفي)، بس ما يصير يكون جنب بيت لاعب ثاني مباشرة.</li>
         <li>رقم 7 يحرّك العاصفة: الأرض التي تقف عليها لا تعطي موارد، وتأخذ موردًا من أحد الجيران.</li>
         <li>يمكنك أن تعرض مبادلة على إخوتك، أو تبادل مع السوق 4 بواحد.</li>
         <li>أول من يصل إلى عدد النقاط المطلوب يفوز!</li>
