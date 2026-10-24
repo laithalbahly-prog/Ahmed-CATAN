@@ -1,0 +1,740 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0b3440">
+<title>جزيرة البنّائين</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lalezar&family=Tajawal:wght@400;500;700;800&display=swap">
+<style>
+html{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+[hidden]{display:none!important}
+img{max-width:100%}
+body{margin:0}
+/* Layout: the island sits in a deep-sea field; a paper "control deck" sits beside it on wide screens and under it on phones */
+:root{
+  --sea:#0f4c5c; --sea-deep:#0b3440; --sand:#f0d6a0; --paper:#fff8ea; --ink:#1d2a2e;
+  --accent:#e8a33d; --muted:#6c7a77; --line:#e3d4b4; --foam:#d7eef0;
+  --display:'Lalezar','Tajawal',system-ui,sans-serif;
+  --body:'Tajawal',system-ui,-apple-system,'Segoe UI',sans-serif;
+  color-scheme:dark;
+}
+html,body{background:var(--sea-deep)}
+body{font-family:var(--body);color:var(--foam);font-size:16px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:14px 32px}
+*{box-sizing:border-box}
+.wrap{max-width:1180px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+header.top{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(28px,6vw,40px);margin:0;color:var(--sand);line-height:1.1;text-wrap:balance}
+.sub{color:#9cc3c7;font-size:14px}
+button{font-family:var(--body);font-size:15px;font-weight:700;border:0;border-radius:12px;padding:10px 14px;cursor:pointer;color:var(--ink);background:var(--paper)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button:disabled{opacity:.42;cursor:not-allowed}
+.ghost{background:transparent;color:var(--foam);border:1.5px solid #2f6b78}
+
+/* setup */
+.setup{background:var(--paper);color:var(--ink);border-radius:20px;padding:22px;max-width:560px;width:100%;margin:8px auto;display:flex;flex-direction:column;gap:16px}
+.setup h2{font-family:var(--display);font-weight:400;font-size:28px;margin:0}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{background:#f3e7cc;border:2px solid transparent}
+.seg button[aria-pressed="true"]{border-color:var(--ink);background:var(--sand)}
+.names{display:flex;flex-direction:column;gap:10px}
+.nameRow{display:flex;align-items:center;gap:10px}
+.nameRow input{flex:1;min-width:0;font:inherit;padding:10px 12px;border-radius:10px;border:1.5px solid var(--line);background:#fff;color:var(--ink)}
+.dot{width:22px;height:22px;border-radius:50%;flex:none;border:2px solid var(--ink)}
+.go{background:var(--accent);font-size:18px;padding:14px}
+.lbl{font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.02em}
+
+/* game */
+.game{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+@media (min-width:880px){.game{grid-template-columns:minmax(0,1.45fr) minmax(300px,1fr);align-items:start}}
+.boardBox{background:var(--sea);border-radius:22px;padding:6px;position:relative;min-width:0}
+.boardBox svg{display:block;width:100%;height:auto;max-width:100%;touch-action:manipulation}
+.hint{background:var(--paper);color:var(--ink);border-radius:14px;padding:10px 14px;font-weight:700;display:flex;align-items:center;gap:10px}
+.hint .dot{width:18px;height:18px}
+.deck{display:flex;flex-direction:column;gap:12px;min-width:0}
+.card{background:var(--paper);color:var(--ink);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px}
+.card h3{margin:0;font-size:13px;font-weight:800;color:var(--muted);letter-spacing:.02em}
+.diceRow{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.die{width:52px;height:52px;border-radius:12px;background:#fff;border:2px solid var(--ink);display:grid;place-items:center;font-family:var(--display);font-size:30px;line-height:1}
+.die.roll{animation:shake .45s}
+@keyframes shake{0%{transform:rotate(0)}25%{transform:rotate(-18deg)}50%{transform:rotate(14deg)}75%{transform:rotate(-8deg)}100%{transform:rotate(0)}}
+@media (prefers-reduced-motion:reduce){.die.roll,.pulse{animation:none!important}}
+.sum{font-family:var(--display);font-size:26px}
+.big{background:var(--accent);font-size:18px;padding:12px 18px}
+.builds{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.bld{display:flex;flex-direction:column;align-items:center;gap:2px;background:#f3e7cc;border:2px solid transparent;padding:10px 6px}
+.bld[aria-pressed="true"]{border-color:var(--ink);background:var(--sand)}
+.bld .nm{font-size:15px}
+.bld .cost{font-size:13px;letter-spacing:1px}
+.res{display:flex;gap:6px;flex-wrap:wrap}
+.chip{display:inline-flex;align-items:center;gap:4px;background:#fff;border:1.5px solid var(--line);border-radius:999px;padding:3px 9px;font-weight:700;font-variant-numeric:tabular-nums;font-size:15px}
+.chip.zero{opacity:.45}
+.players{display:flex;flex-direction:column;gap:8px}
+.pl{display:flex;flex-direction:column;gap:6px;padding:10px;border-radius:14px;border:2px solid var(--line)}
+.pl.on{border-color:var(--ink);background:#fff}
+.plHead{display:flex;align-items:center;gap:8px;font-weight:800}
+.vp{margin-inline-start:auto;font-family:var(--display);font-size:20px;font-weight:400}
+.trade{display:flex;flex-direction:column;gap:8px}
+.tRow{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.tRow .t{font-size:13px;font-weight:800;color:var(--muted);width:72px}
+.tb{padding:6px 10px;background:#f3e7cc;border:2px solid transparent;font-size:18px}
+.tb[aria-pressed="true"]{border-color:var(--ink);background:var(--sand)}
+.log{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:4px;font-size:14px;color:#3b4a4d}
+.log li:first-child{font-weight:700;color:var(--ink)}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+details{background:var(--paper);color:var(--ink);border-radius:18px;padding:12px 14px}
+summary{font-weight:800;cursor:pointer}
+details ul{margin:8px 0 0;padding-inline-start:20px;display:flex;flex-direction:column;gap:4px}
+.win{background:var(--accent);color:var(--ink);border-radius:18px;padding:18px;text-align:center}
+.win b{font-family:var(--display);font-weight:400;font-size:32px;display:block}
+.pulse{animation:pulse 1.1s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.35}}
+svg .hit{cursor:pointer}
+.me{background:var(--paper);color:var(--ink);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:10px;border:3px solid var(--accent)}
+.me .res .chip{font-size:18px;padding:5px 12px}
+.meHead{display:flex;align-items:center;gap:8px;font-weight:800;font-size:18px}
+.meHead button{margin-inline-start:auto;font-size:13px;padding:6px 10px;background:#f3e7cc}
+.count{font-weight:700;color:var(--muted);font-size:14px}
+.offer{background:#fff3d6;border:2px dashed var(--accent);border-radius:14px;padding:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-weight:700}
+.offer .sp{flex:1}
+.seats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.seats button{display:flex;align-items:center;gap:10px;justify-content:center;font-size:18px;padding:16px;background:#f3e7cc}
+.net{font-size:13px;color:#9cc3c7}
+.wait{opacity:.8}
+.invite{border:3px solid var(--accent)}
+.invBody{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+.code{font-family:var(--display);font-size:44px;letter-spacing:.12em;text-align:center;background:#fff;border-radius:14px;padding:6px;direction:ltr}
+.linkText{background:#fff;border:1.5px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;overflow-wrap:anywhere;user-select:all}
+.small{font-size:13px;color:var(--muted);font-weight:500}
+.pres{font-size:12px;font-weight:700;color:var(--muted);background:#eee3c9;border-radius:999px;padding:1px 8px}
+.pres.in{color:#1e6b34;background:#d5efd9}
+.joinRow{display:flex;gap:8px}
+.joinRow input{flex:1;min-width:0;font:inherit;font-size:22px;letter-spacing:.15em;text-transform:uppercase;text-align:center;padding:10px;border-radius:12px;border:2px solid var(--line);background:#fff;color:var(--ink)}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>جزيرة البنّائين</h1>
+    <span class="net" id="net"></span>
+  </header>
+  <main id="app"></main>
+</div>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+const RES={
+  wood:{n:'خشب',i:'🌲',c:'#4c8a3e'},
+  brick:{n:'طوب',i:'🧱',c:'#c4643b'},
+  wheat:{n:'قمح',i:'🌾',c:'#e2bb45'},
+  sheep:{n:'صوف',i:'🐑',c:'#a6cf6a'},
+  ore:{n:'حجر',i:'⛰️',c:'#8f9aa4'},
+  desert:{n:'صحراء',i:'🏜️',c:'#e8cf9c'}
+};
+const RK=['wood','brick','wheat','sheep','ore'];
+const COST={road:{wood:1,brick:1},settle:{wood:1,brick:1,wheat:1,sheep:1},city:{wheat:2,ore:3}};
+const PCOL=['#e5484d','#2f6fe0','#f08c2e','#8e4ec6'];
+const DEF_NAMES=['بابا','أحمد','سارة','ليلى'];
+const PREFIX='bnaain-island-v1-';
+const HKEY='bi-host-game',LKEY='bi-local-game',SKEY='bi-seats',CKEY='bi-host-code';
+
+let role=null;           // 'host' | 'client' | 'local'
+let G=null;              // game state (host owns the real copy)
+let peer=null,conn=null,conns=[];
+let code=null,status='',errMsg='';
+let lastDiceSeq=-1,wakeLock=null;
+let ui={count:3,target:8,names:[...DEF_NAMES],give:null,get:null,offGive:null,offGet:null,confirmNew:false,rolling:false,mode:null,creating:false,joinCode:'',copied:false};
+const app=document.getElementById('app'),net=document.getElementById('net');
+
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const d6=()=>1+Math.floor(Math.random()*6);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const clone=o=>JSON.parse(JSON.stringify(o));
+function lsGet(k){try{return JSON.parse(localStorage.getItem(k)||'null')}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+let seats=lsGet(SKEY)||{};
+function mySeat(){if(role==='local')return G?G.cur:null;const s=G&&seats[G.id];return (typeof s==='number')?s:null}
+function setSeat(i){seats={[G.id]:i};lsSet(SKEY,seats)}
+const newCode=()=>Array.from({length:5},()=>'ABCDEFGHJKMNPQRSTUVWXYZ23456789'[Math.floor(Math.random()*31)]).join('');
+
+/* ---------- board ---------- */
+function buildBoard(){
+  const S=50,coords=[];
+  for(let q=-2;q<=2;q++)for(let r=-2;r<=2;r++)if(Math.abs(q+r)<=2)coords.push([q,r]);
+  const pool=[];
+  [['wood',4],['brick',3],['wheat',4],['sheep',4],['ore',3],['desert',1]].forEach(([k,n])=>{for(let i=0;i<n;i++)pool.push(k)});
+  const NUMS=[2,3,3,4,4,5,5,6,6,8,8,9,9,10,10,11,11,12];
+  let hexes;
+  for(let t=0;t<400;t++){
+    const rs=shuffle([...pool]),ns=shuffle([...NUMS]);let k=0;
+    hexes=coords.map(([q,r])=>({q,r}));
+    hexes.forEach((h,i)=>{h.res=rs[i];h.num=rs[i]==='desert'?0:ns[k++]});
+    const hot=hexes.filter(h=>h.num===6||h.num===8);
+    const bad=hot.some(a=>hot.some(b=>a!==b&&Math.max(Math.abs(a.q-b.q),Math.abs(a.r-b.r),Math.abs(a.q+a.r-b.q-b.r))===1));
+    if(!bad)break;
+  }
+  const verts=[],vmap={},edges=[],emap={};
+  hexes.forEach((h,hi)=>{
+    h.cx=+(S*Math.sqrt(3)*(h.q+h.r/2)).toFixed(2);h.cy=S*1.5*h.r;h.verts=[];
+    for(let i=0;i<6;i++){
+      const a=Math.PI/180*(60*i-30),x=h.cx+S*Math.cos(a),y=h.cy+S*Math.sin(a);
+      const key=Math.round(x)+','+Math.round(y);
+      if(vmap[key]===undefined){vmap[key]=verts.length;verts.push({x:+x.toFixed(2),y:+y.toFixed(2),hexes:[],adj:[],owner:-1,city:false})}
+      const v=vmap[key];h.verts.push(v);verts[v].hexes.push(hi);
+    }
+    for(let i=0;i<6;i++){
+      const a=h.verts[i],b=h.verts[(i+1)%6],key=Math.min(a,b)+'-'+Math.max(a,b);
+      if(emap[key]===undefined){emap[key]=edges.length;edges.push({a,b,owner:-1});verts[a].adj.push(b);verts[b].adj.push(a)}
+    }
+  });
+  return {hexes,verts,edges,robber:hexes.findIndex(h=>h.res==='desert')};
+}
+
+/* ---------- rules ---------- */
+const P=()=>G.players[G.cur];
+const vp=p=>G.verts.reduce((s,v)=>s+(v.owner===p?(v.city?2:1):0),0);
+const total=p=>RK.reduce((s,k)=>s+G.players[p].res[k],0);
+function canSettle(v,p,setup){
+  const V=G.verts[v];if(!V||V.owner>=0)return false;
+  if(V.adj.some(a=>G.verts[a].owner>=0))return false;
+  if(setup)return true;
+  return G.edges.some(e=>e.owner===p&&(e.a===v||e.b===v));
+}
+function canRoad(ei,p){
+  const e=G.edges[ei];if(!e||e.owner>=0)return false;
+  if(G.phase==='setup')return e.a===G.lastV||e.b===G.lastV;
+  return [e.a,e.b].some(v=>{
+    const V=G.verts[v];if(V.owner===p)return true;if(V.owner>=0)return false;
+    return G.edges.some((o,j)=>j!==ei&&o.owner===p&&(o.a===v||o.b===v));
+  });
+}
+const canCity=(v,p)=>G.verts[v]&&G.verts[v].owner===p&&!G.verts[v].city;
+const afford=(p,k)=>Object.entries(COST[k]).every(([r,n])=>G.players[p].res[r]>=n);
+function pay(p,k){for(const [r,n] of Object.entries(COST[k]))G.players[p].res[r]-=n}
+function log(s){G.log.unshift(s);G.log=G.log.slice(0,8)}
+function resText(o){return Object.entries(o).map(([k,n])=>RES[k].i+'×'+n).join(' ')}
+function checkWin(){if(vp(G.cur)>=G.target){G.phase='over';G.winner=G.cur;log('🏆 '+P().name+' فاز!')}}
+const myTurn=()=>G&&mySeat()===G.cur&&G.phase!=='over';
+const isRes=k=>RK.includes(k);
+
+function makeGame(){
+  const n=ui.count,names=ui.names.slice(0,n).map((s,i)=>s.trim()||DEF_NAMES[i]);
+  const g={...buildBoard(),id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+     players:names.map((nm,i)=>({name:nm,color:PCOL[i],res:{wood:0,brick:0,wheat:0,sheep:0,ore:0}})),
+     order:[...Array(n).keys(),...[...Array(n).keys()].reverse()],setupIdx:0,setupNeed:'settle',lastV:null,
+     phase:'setup',dice:null,diceSeq:0,target:ui.target,log:[],winner:null,offer:null,seq:0,here:[]};
+  g.cur=g.order[0];
+  g.log.unshift(role==='host'?'بدأت لعبة جديدة! أرسل الرابط للأطفال':'بدأت لعبة جديدة!');
+  return g;
+}
+
+/* The single place where moves change the game. Runs on the host (or the one device in local mode). */
+function apply(seat,a){
+  if(!G||!a||typeof seat!=='number')return false;
+  if(G.phase==='over')return false;
+  const p=G.cur,turn=seat===p;
+  switch(a.t){
+    case 'vertex':{
+      const v=+a.v;
+      if(!turn)return false;
+      if(G.phase==='setup'&&G.setupNeed==='settle'&&canSettle(v,p,true)){
+        G.verts[v].owner=p;G.lastV=v;
+        if(G.setupIdx>=G.players.length){
+          const got={};G.verts[v].hexes.forEach(h=>{const r=G.hexes[h].res;if(r!=='desert'){P().res[r]++;got[r]=(got[r]||0)+1}});
+          log(P().name+' بنى بيته الثاني وحصل على '+(resText(got)||'لا شيء'));
+        } else log(P().name+' بنى أول بيت');
+        G.setupNeed='road';return true;
+      }
+      if(G.phase==='main'&&a.mode==='settle'&&canSettle(v,p,false)&&afford(p,'settle')){
+        pay(p,'settle');G.verts[v].owner=p;log(P().name+' بنى بيتًا جديدًا 🏠');checkWin();return true;
+      }
+      if(G.phase==='main'&&a.mode==='city'&&canCity(v,p)&&afford(p,'city')){
+        pay(p,'city');G.verts[v].city=true;log(P().name+' حوّل بيته إلى مدينة 🏰');checkWin();return true;
+      }
+      return false;
+    }
+    case 'edge':{
+      const ei=+a.e;
+      if(!turn)return false;
+      if(G.phase==='setup'&&G.setupNeed==='road'&&canRoad(ei,p)){
+        G.edges[ei].owner=p;G.setupIdx++;G.setupNeed='settle';G.lastV=null;
+        if(G.setupIdx>=G.order.length){G.phase='roll';G.cur=0;log('انتهى التجهيز. الآن دور '+P().name)}
+        else G.cur=G.order[G.setupIdx];
+        return true;
+      }
+      if(G.phase==='main'&&a.mode==='road'&&canRoad(ei,p)&&afford(p,'road')){
+        pay(p,'road');G.edges[ei].owner=p;log(P().name+' بنى طريقًا');return true;
+      }
+      return false;
+    }
+    case 'hex':{
+      const h=+a.h;
+      if(!turn||G.phase!=='robber'||!G.hexes[h]||h===G.robber)return false;
+      G.robber=h;
+      const victims=[...new Set(G.hexes[h].verts.map(v=>G.verts[v].owner))].filter(o=>o>=0&&o!==p&&total(o)>0);
+      if(victims.length){
+        const vic=victims[Math.floor(Math.random()*victims.length)],cards=[];
+        RK.forEach(k=>{for(let i=0;i<G.players[vic].res[k];i++)cards.push(k)});
+        const k=cards[Math.floor(Math.random()*cards.length)];
+        G.players[vic].res[k]--;P().res[k]++;
+        log('🌪️ العاصفة أخذت '+RES[k].i+' من '+G.players[vic].name+' إلى '+P().name);
+      } else log('🌪️ تحرّكت العاصفة');
+      G.phase='main';return true;
+    }
+    case 'roll':{
+      if(!turn||G.phase!=='roll')return false;
+      const x=d6(),y=d6(),s=x+y;G.dice=[x,y];G.diceSeq=(G.diceSeq||0)+1;
+      if(s===7){G.phase='robber';log(P().name+' رمى 7! يحرّك العاصفة');return true}
+      const gains=G.players.map(()=>({}));
+      G.hexes.forEach((h,i)=>{if(h.num!==s||i===G.robber)return;
+        h.verts.forEach(v=>{const V=G.verts[v];if(V.owner>=0){const n=V.city?2:1;G.players[V.owner].res[h.res]+=n;gains[V.owner][h.res]=(gains[V.owner][h.res]||0)+n}})});
+      const parts=gains.map((g,i)=>Object.keys(g).length?G.players[i].name+': '+resText(g):'').filter(Boolean);
+      log(P().name+' رمى '+s+' — '+(parts.length?parts.join('، '):'لم يحصل أحد على شيء'));
+      G.phase='main';return true;
+    }
+    case 'end':{
+      if(!turn||G.phase!=='main')return false;
+      G.cur=(G.cur+1)%G.players.length;G.phase='roll';G.dice=null;G.offer=null;log('الآن دور '+P().name);return true;
+    }
+    case 'bank':{
+      if(!turn||G.phase!=='main'||!isRes(a.give)||!isRes(a.get)||a.give===a.get||P().res[a.give]<4)return false;
+      P().res[a.give]-=4;P().res[a.get]++;log(P().name+' بادل مع السوق 4'+RES[a.give].i+' بـ 1'+RES[a.get].i);return true;
+    }
+    case 'offer':{
+      if(!turn||G.phase!=='main'||!isRes(a.give)||!isRes(a.get)||a.give===a.get||P().res[a.give]<1)return false;
+      G.offer={from:p,give:a.give,get:a.get};log(P().name+' يعرض '+RES[a.give].i+' مقابل '+RES[a.get].i);return true;
+    }
+    case 'cancelOffer':{
+      if(!turn||!G.offer)return false;G.offer=null;return true;
+    }
+    case 'accept':{
+      const o=G.offer;if(!o||seat===o.from||!G.players[seat])return false;
+      const A=G.players[o.from],B=G.players[seat];
+      if(A.res[o.give]<1||B.res[o.get]<1)return false;
+      A.res[o.give]--;B.res[o.give]++;B.res[o.get]--;A.res[o.get]++;
+      G.offer=null;log('🤝 '+B.name+' بادل '+A.name+': '+RES[o.get].i+' ↔ '+RES[o.give].i);return true;
+    }
+  }
+  return false;
+}
+
+/* ---------- networking ---------- */
+function hereSeats(){
+  const s=new Set();
+  if(role==='host'&&mySeat()!==null)s.add(mySeat());
+  conns.forEach(c=>{if(c.open&&typeof c.seat==='number')s.add(c.seat)});
+  return [...s];
+}
+function broadcast(){
+  if(role!=='host'||!G)return;
+  G.here=hereSeats();
+  lsSet(HKEY,G);
+  const msg={t:'state',G};
+  conns.forEach(c=>{if(c.open){try{c.send(msg)}catch(e){}}});
+}
+// every button press goes through here
+function send(a){
+  if(!G)return;
+  if(role==='client'){
+    if(conn&&conn.open){conn.send({t:'act',seat:mySeat(),a})}
+    else{errMsg='لا يوجد اتصال بجهاز المضيف الآن';render()}
+    return;
+  }
+  const seat=role==='local'?(typeof a.as==='number'?a.as:G.cur):mySeat();
+  if(apply(seat,a)){G.seq=(G.seq||0)+1;if(role==='host')broadcast();else lsSet(LKEY,G)}
+  render();
+}
+
+function startHost(game,keepCode){
+  role='host';G=game;
+  code=keepCode||lsGet(CKEY)||newCode();lsSet(CKEY,code);
+  lsSet(HKEY,G);
+  status='connecting';render();
+  openHostPeer(0);
+  try{navigator.wakeLock&&navigator.wakeLock.request('screen').then(l=>{wakeLock=l}).catch(()=>{})}catch(e){}
+}
+function openHostPeer(tries){
+  if(typeof Peer==='undefined'){status='nolib';render();return}
+  if(peer){try{peer.destroy()}catch(e){}}
+  peer=new Peer(PREFIX+code);
+  peer.on('open',()=>{status='ready';errMsg='';render()});
+  peer.on('connection',c=>{
+    c.on('open',()=>{conns.push(c);c.send({t:'state',G});});
+    c.on('data',m=>{
+      if(!m||typeof m!=='object')return;
+      if(m.t==='claim'&&typeof m.seat==='number'&&G.players[m.seat]){c.seat=m.seat;broadcast();render();return}
+      if(m.t==='act'){
+        if(typeof m.seat==='number')c.seat=m.seat;
+        if(apply(m.seat,m.a)){G.seq=(G.seq||0)+1}
+        broadcast();render();  // send state back either way so a rejected move resyncs
+      }
+    });
+    const drop=()=>{conns=conns.filter(x=>x!==c);broadcast();render()};
+    c.on('close',drop);c.on('error',drop);
+  });
+  peer.on('disconnected',()=>{status='reconnecting';render();setTimeout(()=>{try{peer.reconnect()}catch(e){}},1500)});
+  peer.on('error',e=>{
+    if(e.type==='unavailable-id'){
+      // the old copy of this code may still be registered for a few seconds after a reload
+      if(tries<4){status='connecting';render();setTimeout(()=>openHostPeer(tries+1),3000)}
+      else{code=newCode();lsSet(CKEY,code);openHostPeer(0)}
+      return;
+    }
+    if(e.type==='network'||e.type==='server-error'||e.type==='socket-error'||e.type==='socket-closed'){
+      status='reconnecting';render();setTimeout(()=>openHostPeer(tries),4000);return;
+    }
+  });
+}
+
+let retryTimer=null;
+function startClient(c){
+  role='client';code=c.toUpperCase().replace(/[^A-Z0-9]/g,'');
+  status='connecting';render();
+  if(typeof Peer==='undefined'){status='nolib';render();return}
+  peer=new Peer();
+  peer.on('open',()=>connectToHost());
+  peer.on('disconnected',()=>{setTimeout(()=>{try{peer.reconnect()}catch(e){}},1500)});
+  peer.on('error',e=>{
+    if(e.type==='peer-unavailable'){status='nohost';render();scheduleRetry();return}
+    if(e.type==='network'||e.type==='server-error'||e.type==='socket-error'){status='reconnecting';render();scheduleRetry()}
+  });
+}
+function scheduleRetry(){clearTimeout(retryTimer);retryTimer=setTimeout(connectToHost,3000)}
+function connectToHost(){
+  if(!peer||peer.destroyed)return;
+  if(peer.disconnected){try{peer.reconnect()}catch(e){}scheduleRetry();return}
+  if(conn){try{conn.close()}catch(e){}}
+  const c=peer.connect(PREFIX+code,{reliable:true});conn=c;
+  c.on('open',()=>{status='ready';errMsg='';if(G&&mySeat()!==null)c.send({t:'claim',seat:mySeat()});render()});
+  c.on('data',m=>{
+    if(!m||m.t!=='state'||!m.G)return;
+    const prev=G;G=m.G;
+    if(prev&&(prev.id!==G.id||prev.cur!==G.cur))ui.mode=null;
+    if(prev&&prev.id!==G.id){ui.give=ui.get=ui.offGive=ui.offGet=null}
+    if(mySeat()!==null&&!(G.here||[]).includes(mySeat()))c.send({t:'claim',seat:mySeat()});
+    errMsg='';render();
+  });
+  c.on('close',()=>{if(conn===c){status='reconnecting';render();scheduleRetry()}});
+  c.on('error',()=>{if(conn===c){status='reconnecting';render();scheduleRetry()}});
+  // if nothing answers, try again
+  setTimeout(()=>{if(conn===c&&!c.open){status=status==='ready'?'reconnecting':status;scheduleRetry()}},8000);
+}
+function inviteLink(){return location.origin+location.pathname+'?room='+code}
+async function shareInvite(){
+  const url=inviteLink(),text='تعال نلعب جزيرة البنّائين! افتح الرابط واختر اسمك 🏝️';
+  if(navigator.share){try{await navigator.share({title:'جزيرة البنّائين',text,url});return}catch(e){if(e&&e.name==='AbortError')return}}
+  try{await navigator.clipboard.writeText(text+'\n'+url);ui.copied=true;render();setTimeout(()=>{ui.copied=false;render()},2500)}
+  catch(e){const el=document.getElementById('linkText');if(el){const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r)}}
+}
+
+/* ---------- render ---------- */
+function netText(){
+  if(role==='local')return 'جهاز واحد: مرّروا الجهاز بالدور';
+  if(role==='host'){
+    if(status==='ready'){const n=conns.filter(c=>c.open).length;return '🟢 أنت المضيف · الرمز '+code+' · '+n+' جهاز متصل'}
+    return '🟡 نجهّز الاتصال…';
+  }
+  if(role==='client'){
+    if(status==='ready')return '🟢 متصل بلعبة '+code;
+    if(status==='nohost')return '🔴 جهاز المضيف غير متصل، نحاول مرة أخرى…';
+    return '🟡 نتصل بجهاز المضيف…';
+  }
+  return '';
+}
+function hintText(){
+  const p=P(),me=mySeat(),waiting=role!=='local'&&me!==G.cur;
+  if(G.phase==='over')return '🏆 '+G.players[G.winner].name+' فاز باللعبة!';
+  if(waiting){
+    if(G.phase==='setup')return 'ينتظر '+p.name+' ليضع '+(G.setupNeed==='settle'?'بيتًا':'طريقًا')+'…';
+    if(G.phase==='robber')return p.name+' يحرّك العاصفة…';
+    return 'دور '+p.name+' الآن. انتظر دورك';
+  }
+  if(G.phase==='setup'){
+    if(G.setupNeed==='settle')return (role==='local'?p.name+': ':'دورك! ')+'اضغط على دائرة مضيئة لتضع '+(G.setupIdx>=G.players.length?'بيتك الثاني (ستأخذ موارده)':'بيتك الأول');
+    return (role==='local'?p.name+': ':'')+'ضع طريقًا ملاصقًا لبيتك الجديد';
+  }
+  if(G.phase==='roll')return 'دورك يا '+p.name+'! ارمِ النرد';
+  if(G.phase==='robber')return 'رقم 7! اضغط على أرض لتنقل إليها العاصفة';
+  if(ui.mode==='road')return 'اضغط على خط مضيء لبناء الطريق';
+  if(ui.mode==='settle')return 'اضغط على دائرة مضيئة لبناء البيت';
+  if(ui.mode==='city')return 'اضغط على أحد بيوتك لتحويله إلى مدينة';
+  return 'ابنِ أو بادل، ثم أنهِ الدور';
+}
+function boardSVG(){
+  const o=[],mt=myTurn();
+  const R=248,sea=[];for(let i=0;i<6;i++){const a=Math.PI/3*i;sea.push((R*Math.cos(a)).toFixed(1)+','+(R*0.98*Math.sin(a)).toFixed(1))}
+  o.push(`<svg viewBox="-262 -232 524 464" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="لوحة الجزيرة">`);
+  o.push(`<polygon points="${sea.join(' ')}" fill="#f0d6a0" stroke="#c9a970" stroke-width="3" stroke-linejoin="round"/>`);
+  G.hexes.forEach((h,i)=>{
+    const pts=h.verts.map(v=>G.verts[v].x+','+G.verts[v].y).join(' ');
+    const pick=mt&&G.phase==='robber'&&i!==G.robber;
+    o.push(`<polygon points="${pts}" fill="${RES[h.res].c}" stroke="#f6e6c1" stroke-width="3" ${pick?'class="pulse"':''}/>`);
+    o.push(`<text x="${h.cx}" y="${h.cy-15}" text-anchor="middle" font-size="20" pointer-events="none">${RES[h.res].i}</text>`);
+    if(h.num){
+      const red=h.num===6||h.num===8,dots=6-Math.abs(7-h.num),hit=G.dice&&G.dice[0]+G.dice[1]===h.num&&G.phase!=='robber';
+      o.push(`<circle cx="${h.cx}" cy="${h.cy+13}" r="15" fill="${hit?'#ffe08a':'#fff8ea'}" stroke="#1d2a2e" stroke-width="${hit?3:1.5}" pointer-events="none"/>`);
+      o.push(`<text x="${h.cx}" y="${h.cy+18}" text-anchor="middle" font-size="16" font-weight="800" font-family="Tajawal,system-ui,sans-serif" fill="${red?'#c0392b':'#1d2a2e'}" pointer-events="none">${h.num}</text>`);
+      for(let d=0;d<dots;d++)o.push(`<circle cx="${h.cx-(dots-1)*2.4+d*4.8}" cy="${h.cy+23}" r="1.4" fill="${red?'#c0392b':'#1d2a2e'}" pointer-events="none"/>`);
+    }
+    if(i===G.robber){
+      o.push(`<polygon points="${pts}" fill="#0b1a20" opacity=".38" pointer-events="none"/>`);
+      o.push(`<text x="${h.cx+22}" y="${h.cy-8}" text-anchor="middle" font-size="22" pointer-events="none">🌪️</text>`);
+    }
+    if(pick)o.push(`<polygon points="${pts}" fill="transparent" class="hit" data-h="${i}"/>`);
+  });
+  G.edges.forEach(e=>{
+    if(e.owner<0)return;
+    const A=G.verts[e.a],B=G.verts[e.b],x1=A.x+(B.x-A.x)*.18,y1=A.y+(B.y-A.y)*.18,x2=B.x-(B.x-A.x)*.18,y2=B.y-(B.y-A.y)*.18;
+    o.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#1d2a2e" stroke-width="10" stroke-linecap="round"/>`);
+    o.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${G.players[e.owner].color}" stroke-width="6" stroke-linecap="round"/>`);
+  });
+  const roadMode=mt&&((G.phase==='setup'&&G.setupNeed==='road')||(G.phase==='main'&&ui.mode==='road'));
+  if(roadMode)G.edges.forEach((e,i)=>{
+    if(!canRoad(i,G.cur))return;
+    const A=G.verts[e.a],B=G.verts[e.b];
+    o.push(`<line class="pulse" x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" stroke="#fff" stroke-width="7" stroke-dasharray="6 5" stroke-linecap="round" pointer-events="none"/>`);
+    o.push(`<line class="hit" data-e="${i}" x1="${A.x}" y1="${A.y}" x2="${B.x}" y2="${B.y}" stroke="transparent" stroke-width="22"/>`);
+  });
+  G.verts.forEach(v=>{
+    if(v.owner<0)return;const c=G.players[v.owner].color,x=v.x,y=v.y;
+    const d=v.city?`M${x-13} ${y+9}L${x-13} ${y-3}L${x-5} ${y-10}L${x+2} ${y-3}L${x+2} ${y-13}L${x+13} ${y-13}L${x+13} ${y+9}Z`
+                  :`M${x-9} ${y+7}L${x-9} ${y-2}L${x} ${y-11}L${x+9} ${y-2}L${x+9} ${y+7}Z`;
+    o.push(`<path d="${d}" fill="${c}" stroke="#1d2a2e" stroke-width="2.2" stroke-linejoin="round"/>`);
+  });
+  if(mt){
+    const settleSetup=G.phase==='setup'&&G.setupNeed==='settle';
+    G.verts.forEach((v,i)=>{
+      let ok=false;
+      if(settleSetup)ok=canSettle(i,G.cur,true);
+      else if(G.phase==='main'&&ui.mode==='settle')ok=canSettle(i,G.cur,false);
+      else if(G.phase==='main'&&ui.mode==='city')ok=canCity(i,G.cur);
+      if(!ok)return;
+      const city=ui.mode==='city'&&G.phase==='main';
+      o.push(`<circle class="pulse" cx="${v.x}" cy="${v.y}" r="${city?15:8}" fill="${city?'none':'#fff'}" stroke="${P().color}" stroke-width="3" pointer-events="none"/>`);
+      o.push(`<circle class="hit" data-v="${i}" cx="${v.x}" cy="${v.y}" r="16" fill="transparent"/>`);
+    });
+  }
+  o.push('</svg>');
+  return o.join('');
+}
+const costHTML=k=>Object.entries(COST[k]).map(([r,n])=>RES[r].i.repeat(n)).join('');
+function chips(res){return RK.map(k=>`<span class="chip ${res[k]?'':'zero'}" title="${RES[k].n}">${RES[k].i} ${res[k]}</span>`).join('')}
+
+function inviteCard(open){
+  return `<details class="invite" ${open?'open':''}><summary>📨 ادعُ الأطفال للعب</summary>
+    <div class="invBody">
+      <div class="code" aria-label="رمز اللعبة">${esc(code||'')}</div>
+      <span>أرسل لهم هذا الرابط (واتساب مثلًا). يفتحه كل واحد من موبايله ويختار اسمه.</span>
+      <div class="linkText" id="linkText" dir="ltr">${esc(inviteLink())}</div>
+      <button class="big" id="share">${ui.copied?'تم النسخ ✓':(navigator.share?'أرسل الرابط':'انسخ الرابط')}</button>
+      <span class="small">مهم: أبقِ اللعبة مفتوحة على هذا الجهاز طوال اللعب، لأنه هو الذي يربط الجميع.</span>
+    </div></details>`;
+}
+
+function render(){
+  net.textContent=netText();
+  if(!role){renderStart();return}
+  if(role==='client'&&!G){renderJoining();return}
+  if(!G||ui.creating){renderSetup();return}
+  if(role!=='local'&&mySeat()===null){renderSeats();return}
+  const me=mySeat(),p=P(),mt=myTurn(),main=G.phase==='main'&&mt,local=role==='local';
+  if(G.diceSeq!==lastDiceSeq){ui.rolling=lastDiceSeq!==-1&&!!G.dice;lastDiceSeq=G.diceSeq;if(ui.rolling)setTimeout(()=>{ui.rolling=false;const d=document.querySelectorAll('.die');d.forEach(x=>x.classList.remove('roll'))},500)}
+  const dice=G.dice||['؟','؟'];
+  const here=G.here||[];
+  const bld=(k,nm)=>`<button class="bld" data-mode="${k}" aria-pressed="${ui.mode===k}" ${main&&afford(G.cur,k)?'':'disabled'}><span class="nm">${nm}</span><span class="cost">${costHTML(k)}</span></button>`;
+  const tb=(kind,k,min)=>{const dis=(kind==='give'||kind==='offGive')&&p.res[k]<min;return `<button class="tb" data-${kind.toLowerCase()}="${k}" aria-pressed="${ui[kind]===k}" ${!main||dis?'disabled':''} title="${RES[k].n}">${RES[k].i}</button>`};
+  const meP=G.players[me];
+  const o=G.offer;
+  let offerHTML='';
+  if(o&&G.phase!=='over'){
+    const A=G.players[o.from];
+    if(!local&&me!==o.from){
+      const can=meP.res[o.get]>=1;
+      offerHTML=`<div class="offer"><span>${esc(A.name)} يعطيك ${RES[o.give].i} ويأخذ منك ${RES[o.get].i}</span><span class="sp"></span><button class="big" id="accept" style="font-size:15px;padding:8px 14px" ${can?'':'disabled'}>${can?'اقبل 🤝':'ليس عندك '+RES[o.get].i}</button></div>`;
+    } else if(local){
+      offerHTML=`<div class="offer"><span>عرض ${esc(A.name)}: ${RES[o.give].i} مقابل ${RES[o.get].i}</span><span class="sp"></span>${G.players.map((pl,i)=>i!==o.from&&pl.res[o.get]>0?`<button data-acceptas="${i}" style="font-size:14px;padding:7px 10px">${esc(pl.name)} يقبل</button>`:'').join('')}<button id="cancelOffer" style="font-size:14px;padding:7px 10px">ألغِ</button></div>`;
+    } else {
+      offerHTML=`<div class="offer"><span>عرضك: ${RES[o.give].i} مقابل ${RES[o.get].i} — بانتظار من يقبل</span><span class="sp"></span><button id="cancelOffer" style="font-size:14px;padding:7px 10px">ألغِ العرض</button></div>`;
+    }
+  }
+  const allHere=G.players.every((_,i)=>here.includes(i));
+  app.innerHTML=`
+  <div class="game">
+    <section style="display:flex;flex-direction:column;gap:10px;min-width:0">
+      <div class="hint ${mt||G.phase==='over'?'':'wait'}"><span class="dot" style="background:${G.phase==='over'?G.players[G.winner].color:p.color}"></span><span>${esc(hintText())}</span></div>
+      ${errMsg?`<div class="hint" style="background:#ffd9d4">${esc(errMsg)}</div>`:''}
+      ${offerHTML}
+      <div class="boardBox" id="board">${boardSVG()}</div>
+    </section>
+    <aside class="deck">
+      ${role==='host'?inviteCard(!allHere&&G.phase==='setup'):''}
+      ${G.phase==='over'?`<div class="win"><b>🏆 ${esc(G.players[G.winner].name)} فاز!</b>وصل إلى ${vp(G.winner)} نقاط</div>`:''}
+      ${!local?`<div class="me">
+        <div class="meHead"><span class="dot" style="background:${meP.color}"></span>مواردي يا ${esc(meP.name)}<span class="vp" style="margin-inline-start:8px">${vp(me)} ⭐</span><button id="switch">لست ${esc(meP.name)}؟</button></div>
+        <div class="res">${chips(meP.res)}</div>
+      </div>`:''}
+      <div class="card">
+        <h3>النرد</h3>
+        <div class="diceRow">
+          <div class="die ${ui.rolling?'roll':''}">${dice[0]}</div><div class="die ${ui.rolling?'roll':''}">${dice[1]}</div>
+          ${G.dice?`<span class="sum">= ${G.dice[0]+G.dice[1]}</span>`:''}
+          <span style="flex:1"></span>
+          ${mt&&G.phase==='roll'?`<button class="big" id="roll">ارمِ النرد 🎲</button>`:''}
+          ${main?`<button class="big" id="end">أنهِ الدور ⟵</button>`:''}
+        </div>
+      </div>
+      ${mt&&G.phase!=='setup'?`
+      <div class="card">
+        <h3>ابنِ (اضغط ثم اختر المكان على الخريطة)</h3>
+        <div class="builds">${bld('road','طريق')}${bld('settle','بيت')}${bld('city','مدينة')}</div>
+      </div>
+      <div class="card trade">
+        <h3>اعرض مبادلة على اللاعبين: 1 مقابل 1</h3>
+        <div class="tRow"><span class="t">أعطي 1</span>${RK.map(k=>tb('offGive',k,1)).join('')}</div>
+        <div class="tRow"><span class="t">أريد 1</span>${RK.map(k=>tb('offGet',k,0)).join('')}</div>
+        <div class="row"><button id="offer" class="big" style="font-size:15px;padding:9px 14px" ${main&&ui.offGive&&ui.offGet&&ui.offGive!==ui.offGet?'':'disabled'}>اعرض</button></div>
+      </div>
+      <div class="card trade">
+        <h3>بادل مع السوق: 4 من نوع واحد = 1 من أي نوع</h3>
+        <div class="tRow"><span class="t">أعطي 4</span>${RK.map(k=>tb('give',k,4)).join('')}</div>
+        <div class="tRow"><span class="t">آخذ 1</span>${RK.map(k=>tb('get',k,0)).join('')}</div>
+        <div class="row"><button id="trade" class="big" style="font-size:15px;padding:9px 14px" ${main&&ui.give&&ui.get&&ui.give!==ui.get?'':'disabled'}>بادل</button></div>
+      </div>`:''}
+      <div class="card">
+        <h3>اللاعبون — الهدف ${G.target} نقاط (بيت = 1، مدينة = 2)</h3>
+        <div class="players">${G.players.map((pl,i)=>`
+          <div class="pl ${i===G.cur&&G.phase!=='over'?'on':''}">
+            <div class="plHead"><span class="dot" style="background:${pl.color}"></span>${esc(pl.name)}${!local&&i===me?' (أنت)':''}${!local?`<span class="pres ${here.includes(i)?'in':''}">${here.includes(i)?'متصل':'غير متصل'}</span>`:''}<span class="vp">${vp(i)} ⭐</span></div>
+            ${!local?`<span class="count">عنده ${total(i)} بطاقة موارد</span>`:`<div class="res">${chips(pl.res)}</div>`}
+          </div>`).join('')}</div>
+      </div>
+      <div class="card"><h3>ماذا حدث</h3><ul class="log">${G.log.map(l=>`<li>${esc(l)}</li>`).join('')}</ul></div>
+      <details><summary>طريقة اللعب</summary><ul>
+        <li>في البداية يضع كل لاعب بيتًا وطريقًا، ثم جولة ثانية بالترتيب المعاكس. البيت الثاني يعطيك موارد الأراضي حوله.</li>
+        <li>في دورك ارمِ النرد: كل أرض عليها الرقم الخارج تعطي موردًا لكل بيت ملاصق لها (والمدينة تأخذ اثنين).</li>
+        <li>البيوت لا تتلاصق، ويجب أن تتصل بطرقك.</li>
+        <li>رقم 7 يحرّك العاصفة: الأرض التي تقف عليها لا تعطي موارد، وتأخذ موردًا من أحد الجيران.</li>
+        <li>يمكنك أن تعرض مبادلة على إخوتك، أو تبادل مع السوق 4 بواحد.</li>
+        <li>أول من يصل إلى عدد النقاط المطلوب يفوز!</li>
+      </ul></details>
+      ${role!=='client'?`<div class="row"><button class="ghost" id="new">${ui.confirmNew?'متأكد؟ ستنتهي اللعبة للجميع. اضغط مرة أخرى':'لعبة جديدة'}</button></div>`:''}
+    </aside>
+  </div>`;
+}
+function renderStart(){
+  const saved=lsGet(HKEY),savedLocal=lsGet(LKEY);
+  app.innerHTML=`
+  <div class="setup">
+    <h2>أهلًا بكم في الجزيرة</h2>
+    <span>جهاز واحد يكون المضيف (موبايل بابا مثلًا)، والباقون ينضمّون بالرابط أو بالرمز.</span>
+    ${saved&&saved.phase!=='over'?`<button class="go" id="resumeHost">تابع اللعبة السابقة (أنا المضيف)</button>`:''}
+    <button class="go" id="host">أنشئ لعبة جديدة (أنا المضيف)</button>
+    <div class="joinRow">
+      <input id="joinCode" placeholder="رمز اللعبة" maxlength="5" autocomplete="off" autocapitalize="characters" dir="ltr" value="${esc(ui.joinCode)}" aria-label="رمز اللعبة">
+      <button class="big" id="join">انضم</button>
+    </div>
+    <button class="ghost" id="local" style="color:var(--ink);border-color:var(--line)">${savedLocal&&savedLocal.phase!=='over'?'تابع لعبة الجهاز الواحد':'العب على جهاز واحد بالدور'}</button>
+  </div>`;
+}
+function renderJoining(){
+  const msg=status==='nohost'?'لم نجد اللعبة. تأكد أن جهاز المضيف فاتح اللعبة، وأن الرمز صحيح. نحاول تلقائيًا…'
+          :status==='nolib'?'تعذّر تحميل أداة الاتصال. تأكد من الإنترنت ثم أعد فتح الصفحة.'
+          :'نتصل بجهاز المضيف…';
+  app.innerHTML=`<div class="setup"><h2>لعبة ${esc(code)}</h2><span class="${status==='nohost'?'':'pulse'}">${msg}</span>
+    <button class="ghost" id="leave" style="color:var(--ink);border-color:var(--line)">رجوع</button></div>`;
+}
+function renderSeats(){
+  const here=G.here||[];
+  app.innerHTML=`
+  <div class="setup">
+    <h2>من أنت؟</h2>
+    <span>اختر اسمك. ستظهر لك مواردك أنت فقط على هذا الجهاز.</span>
+    <div class="seats">${G.players.map((pl,i)=>`<button data-seat="${i}"><span class="dot" style="background:${pl.color}"></span>${esc(pl.name)}${here.includes(i)?'<span class="small">(دخل)</span>':''}</button>`).join('')}</div>
+    ${role==='host'?inviteCard(true):''}
+  </div>`;
+}
+function renderSetup(){
+  app.innerHTML=`
+  <div class="setup">
+    <h2>لعبة جديدة</h2>
+    <span>${role==='local'?'تلعبون على نفس الجهاز: كل لاعب يأخذ دوره ثم يمرّره للتالي.':'اكتب أسماء اللاعبين (وأنت منهم). بعدها ترسل الرابط للأطفال.'}</span>
+    <div><div class="lbl">عدد اللاعبين</div><div class="seg">${[2,3,4].map(n=>`<button data-count="${n}" aria-pressed="${ui.count===n}">${n} لاعبين</button>`).join('')}</div></div>
+    <div class="names">${Array.from({length:ui.count},(_,i)=>`
+      <label class="nameRow"><span class="dot" style="background:${PCOL[i]}"></span>
+      <input id="name${i}" data-name="${i}" value="${esc(ui.names[i])}" maxlength="14" aria-label="اسم اللاعب ${i+1}"></label>`).join('')}</div>
+    <div><div class="lbl">نقاط الفوز</div><div class="seg">${[[6,'قصيرة · 6'],[8,'متوسطة · 8'],[10,'كاملة · 10']].map(([n,t])=>`<button data-target="${n}" aria-pressed="${ui.target===n}">${t}</button>`).join('')}</div></div>
+    <button class="go" id="start">ابدأ اللعب 🏝️</button>
+    <button class="ghost" id="back" style="color:var(--ink);border-color:var(--line)">رجوع</button>
+  </div>`;
+}
+
+app.addEventListener('click',e=>{
+  const t=e.target.closest('[data-v],[data-e],[data-h],button');if(!t)return;
+  if(t.dataset.v!==undefined){const m=ui.mode;if(G.phase==='main')ui.mode=null;return send({t:'vertex',v:+t.dataset.v,mode:m})}
+  if(t.dataset.e!==undefined){const m=ui.mode;if(G.phase==='main')ui.mode=null;return send({t:'edge',e:+t.dataset.e,mode:m})}
+  if(t.dataset.h!==undefined)return send({t:'hex',h:+t.dataset.h});
+  if(t.id!=='new')ui.confirmNew=false;
+  if(t.dataset.count){ui.count=+t.dataset.count;return render()}
+  if(t.dataset.target){ui.target=+t.dataset.target;return render()}
+  if(t.dataset.seat!==undefined){
+    setSeat(+t.dataset.seat);
+    if(role==='client'&&conn&&conn.open)conn.send({t:'claim',seat:+t.dataset.seat});
+    if(role==='host')broadcast();
+    return render();
+  }
+  if(t.dataset.acceptas!==undefined)return send({t:'accept',as:+t.dataset.acceptas});
+  switch(t.id){
+    case 'host':role='host';ui.creating=true;G=null;return render();
+    case 'resumeHost':return startHost(lsGet(HKEY));
+    case 'local':{role='local';const s=lsGet(LKEY);if(s&&s.phase!=='over')G=s;else ui.creating=true;return render()}
+    case 'join':{const c=(document.getElementById('joinCode').value||'').trim();if(c.length<4)return;return startClient(c)}
+    case 'leave':location.href=location.pathname;return;
+    case 'start':{
+      const g=makeGame();ui.creating=false;ui.mode=null;
+      if(role==='local'){G=g;lsSet(LKEY,G);return render()}
+      if(peer&&!peer.destroyed&&code){G=g;broadcast();return render()}
+      return startHost(g);
+    }
+    case 'back':
+      if(G){ui.creating=false;return render()}
+      role=null;ui.creating=false;return render();
+    case 'share':return shareInvite();
+    case 'switch':seats={};lsSet(SKEY,seats);ui.mode=null;if(role==='host')broadcast();return render();
+    case 'roll':return send({t:'roll'});
+    case 'end':ui.mode=null;ui.give=ui.get=ui.offGive=ui.offGet=null;return send({t:'end'});
+    case 'trade':{const a={t:'bank',give:ui.give,get:ui.get};ui.give=ui.get=null;return send(a)}
+    case 'offer':{const a={t:'offer',give:ui.offGive,get:ui.offGet};ui.offGive=ui.offGet=null;return send(a)}
+    case 'cancelOffer':return send({t:'cancelOffer'});
+    case 'accept':return send({t:'accept'});
+    case 'new':
+      if(!ui.confirmNew){ui.confirmNew=true;return render()}
+      ui.confirmNew=false;ui.creating=true;return render();
+  }
+  if(t.dataset.mode){ui.mode=ui.mode===t.dataset.mode?null:t.dataset.mode;return render()}
+  for(const k of ['give','get','offgive','offget']){
+    if(t.dataset[k]){const key={give:'give',get:'get',offgive:'offGive',offget:'offGet'}[k];ui[key]=ui[key]===t.dataset[k]?null:t.dataset[k];return render()}
+  }
+});
+app.addEventListener('input',e=>{
+  if(e.target.dataset.name!==undefined)ui.names[+e.target.dataset.name]=e.target.value;
+  if(e.target.id==='joinCode')ui.joinCode=e.target.value;
+});
+app.addEventListener('keydown',e=>{if(e.target.id==='joinCode'&&e.key==='Enter')document.getElementById('join').click()});
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState!=='visible')return;
+  if(role==='host'){
+    try{navigator.wakeLock&&navigator.wakeLock.request('screen').then(l=>{wakeLock=l}).catch(()=>{})}catch(e){}
+    if(peer&&(peer.disconnected||peer.destroyed))openHostPeer(0);
+  }
+  if(role==='client'&&(!conn||!conn.open))connectToHost();
+});
+
+// opened from an invite link → join straight away
+const roomParam=new URLSearchParams(location.search).get('room');
+if(roomParam)startClient(roomParam);else render();
+</script>
+
+</body>
+</html>
